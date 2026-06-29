@@ -16,12 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-FHFJP09X0Z" strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-M9L670TD96" strategy="afterInteractive" />
         <Script id="ga-init" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-FHFJP09X0Z');
+          gtag('config', 'G-M9L670TD96');
         `}</Script>
         <AuthProvider>
           <CartProvider>
