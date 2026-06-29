@@ -1,0 +1,34 @@
+"use client";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { User } from "@/lib/types";
+
+interface AuthContextType {
+  user: User | null;
+  login: (user: User) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("nd_user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
+
+  const login = (u: User) => {
+    localStorage.setItem("nd_user", JSON.stringify(u));
+    setUser(u);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("nd_user");
+    setUser(null);
+  };
+
+  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+}
+
+export const useAuth = () => useContext(AuthContext);
