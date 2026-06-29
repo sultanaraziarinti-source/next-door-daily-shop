@@ -21,6 +21,8 @@ export default function SignupPage() {
     if (users.find((u: { email: string }) => u.email === form.email.toLowerCase())) { setError("Account with this email already exists."); return; }
     users.push({ ...form, email: form.email.toLowerCase() });
     localStorage.setItem("nd_users", JSON.stringify(users));
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
+      (window as any).gtag("event", "sign_up", { method: "email" });
     setSuccess(true);
     setTimeout(() => router.push("/"), 1600);
   };

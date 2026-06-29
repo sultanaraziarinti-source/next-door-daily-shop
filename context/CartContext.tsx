@@ -31,6 +31,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("nd_cart", JSON.stringify(items));
   };
 
+  const gaEvent = (name: string, params?: Record<string, unknown>) => {
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
+      (window as any).gtag("event", name, params || {});
+  };
+
   const addToCart = (p: Product) => {
     const existing = cart.find(x => x.id === p.id);
     if (existing) {
@@ -38,6 +43,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       save([...cart, { ...p, qty: 1 }]);
     }
+    gaEvent("add_to_cart", { item_name: p.name, item_category: p.category, value: p.price, currency: "USD" });
   };
 
   const removeFromCart = (id: number) => save(cart.filter(x => x.id !== id));

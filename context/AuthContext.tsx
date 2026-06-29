@@ -18,9 +18,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
+  const gaEvent = (name: string, params?: Record<string, unknown>) => {
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
+      (window as any).gtag("event", name, params || {});
+  };
+
   const login = (u: User) => {
     localStorage.setItem("nd_user", JSON.stringify(u));
     setUser(u);
+    gaEvent("login", { method: "email" });
   };
 
   const logout = () => {

@@ -42,6 +42,8 @@ function ShopContent() {
 
   const handleCheckout = () => {
     const total = cartTotal;
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
+      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "USD" });
     clearCart();
     setToast({ msg: `Order placed! Total: $${total} 🎉` });
   };
@@ -77,7 +79,11 @@ function ShopContent() {
                 placeholder="Search products…"
                 className="px-4 py-2.5 rounded-xl bg-white/10 text-white placeholder-gray-400 text-sm border border-white/10 focus:outline-none focus:border-white/30 w-56"
               />
-              <button onClick={() => setSearch(searchInput)} className="px-5 py-2.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
+              <button onClick={() => {
+                setSearch(searchInput);
+                if (searchInput && typeof window !== "undefined" && typeof (window as any).gtag === "function")
+                  (window as any).gtag("event", "search", { search_term: searchInput });
+              }} className="px-5 py-2.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
                 Search
               </button>
             </div>

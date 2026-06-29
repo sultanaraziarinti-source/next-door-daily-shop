@@ -32,6 +32,8 @@ export default function HomePage() {
 
   const handleCheckout = () => {
     const total = cartTotal;
+    if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
+      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "USD" });
     clearCart();
     setToast({ msg: `Order placed! Total: $${total} 🎉` });
   };
