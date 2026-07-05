@@ -52,6 +52,7 @@ export default function Navbar({ activePage, onHamburger }: Props) {
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: "#FF6B35" }}>{user.initials}</div>
               <span className="text-white text-sm font-medium">{user.name.split(" ")[0]}</span>
               <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-white ml-1 cursor-pointer">Sign out</button>
+              <Link href="/admin/login" className="text-xs font-semibold ml-1 px-3 py-1.5 rounded-full cursor-pointer transition-opacity hover:opacity-90" style={{ background: "rgba(255,107,53,0.15)", color: "#FF6B35" }}>Admin login</Link>
             </div>
           )}
           <button onClick={onHamburger} className="md:hidden flex flex-col gap-1.5 p-2 cursor-pointer">
