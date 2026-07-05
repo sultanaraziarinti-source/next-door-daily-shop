@@ -26,8 +26,10 @@ export default function HomePage() {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
+  const [customCategories, setCustomCategories] = useState<{ name: string; type: string; image: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
+  useEffect(() => { setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]")); }, []);
   if (!user) return null;
 
   const handleCheckout = () => {
@@ -87,6 +89,20 @@ export default function HomePage() {
                 <div className="text-4xl mb-3">{c.icon}</div>
                 <h3 className="text-white font-black text-xl">{c.label}</h3>
                 <p className="text-white/70 text-sm">{c.count} products available</p>
+                <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
+              </div>
+            </Link>
+          ))}
+          {customCategories.map((c, i) => (
+            <Link key={`custom-${i}`} href={`/shop?cat=${encodeURIComponent(c.name.toLowerCase())}`}
+              className="relative rounded-2xl overflow-hidden cursor-pointer group shadow-md hover:-translate-y-2 transition-all duration-300" style={{ minHeight: "220px" }}>
+              {c.image
+                ? <img src={c.image} alt={c.name} className="absolute inset-0 w-full h-full object-cover" />
+                : <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,#FF6B35,#E55A24)" }} />}
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.6))" }} />
+              <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
+                <h3 className="text-white font-black text-xl capitalize">{c.name}</h3>
+                <p className="text-white/70 text-sm">{c.type}</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>
