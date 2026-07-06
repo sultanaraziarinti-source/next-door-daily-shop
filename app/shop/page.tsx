@@ -33,12 +33,17 @@ function ShopContent() {
   useEffect(() => { setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]")); }, []);
 
   const filtered = useMemo(() => {
-    // Map admin item category labels (e.g. "Household Items") to filter keys ("household")
-    const labelToKey: Record<string, string> = Object.fromEntries(BUILTIN_CATEGORIES.map(c => [c.label, c.key]));
+    // Map an admin item's category to a filter key, tolerating any form:
+    // "Household Items", "Household", or "household" all -> "household".
+    const normalize = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
+    const keyFor = (label: string) => {
+      const match = BUILTIN_CATEGORIES.find(c => normalize(c.label) === normalize(label) || c.key === normalize(label));
+      return (match ? match.key : label) as Product["category"];
+    };
     const adminProducts: Product[] = adminItems.map((it, idx) => ({
       id: 100000 + idx,
       name: it.name,
-      category: (labelToKey[it.category] ?? it.category) as Product["category"],
+      category: keyFor(it.category),
       emoji: "🛍️",
       price: parseFloat(it.price) || 0,
       oldPrice: null,
