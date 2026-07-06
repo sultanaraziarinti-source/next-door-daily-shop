@@ -49,11 +49,32 @@ export default function AdminPage() {
     router.push("/admin/login");
   };
 
+  // Read an image, downscale + compress it (so it fits in localStorage), and return a data URL
   const readImage = (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setter(reader.result as string);
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 600;
+        let { width, height } = img;
+        if (width > height && width > MAX) { height = Math.round((height * MAX) / width); width = MAX; }
+        else if (height > MAX) { width = Math.round((width * MAX) / height); height = MAX; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          setter(canvas.toDataURL("image/jpeg", 0.7));
+        } else {
+          setter(reader.result as string);
+        }
+      };
+      img.onerror = () => setter(reader.result as string);
+      img.src = reader.result as string;
+    };
     reader.readAsDataURL(file);
   };
 
@@ -73,8 +94,13 @@ export default function AdminPage() {
       return;
     }
     const next = [...categories, { name: trimmed, image }];
+    try {
+      localStorage.setItem("nd_categories", JSON.stringify(next));
+    } catch {
+      setMessage("Could not save — the image is too large for browser storage. Try a smaller image.");
+      return;
+    }
     setCategories(next);
-    localStorage.setItem("nd_categories", JSON.stringify(next));
     setName("");
     setImage("");
     setMessage("Category saved ✓");
@@ -88,8 +114,13 @@ export default function AdminPage() {
       return;
     }
     const next = [...items, { name: itemName.trim(), category: itemCategory, image: itemImage, price: itemPrice.trim() }];
+    try {
+      localStorage.setItem("nd_items", JSON.stringify(next));
+    } catch {
+      setItemMessage("Could not save — the image is too large for browser storage. Try a smaller image.");
+      return;
+    }
     setItems(next);
-    localStorage.setItem("nd_items", JSON.stringify(next));
     setItemName("");
     setItemImage("");
     setItemPrice("");

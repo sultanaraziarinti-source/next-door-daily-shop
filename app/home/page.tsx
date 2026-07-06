@@ -37,10 +37,12 @@ export default function HomePage() {
   }, []);
   if (!user) return null;
 
-  // Category labels that actually have admin-added items, in display order
-  const orderedLabels = [...CATEGORIES.map(c => c.label), ...customCategories.map(c => c.name)];
-  const extraLabels = [...new Set(adminItems.map(it => it.category))].filter(c => !orderedLabels.includes(c));
-  const categoriesWithItems = [...orderedLabels, ...extraLabels].filter(label => adminItems.some(it => it.category === label));
+  // Only show item sections for newly-added custom categories on the home page.
+  // Items in the built-in categories (Household/Kids/Decoration) appear in the shop instead.
+  const builtinLabels = CATEGORIES.map(c => c.label);
+  const customLabels = customCategories.map(c => c.name);
+  const extraLabels = [...new Set(adminItems.map(it => it.category))].filter(c => !builtinLabels.includes(c) && !customLabels.includes(c));
+  const categoriesWithItems = [...customLabels, ...extraLabels].filter(label => adminItems.some(it => it.category === label));
 
   const addAdminItem = (it: { name: string; category: string; image: string; price: string }, idx: number) => {
     const product: Product = { id: 100000 + idx, name: it.name, category: "household", emoji: "🛍️", price: parseFloat(it.price) || 0, oldPrice: null, badge: null };
