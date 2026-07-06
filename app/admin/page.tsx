@@ -57,14 +57,22 @@ export default function AdminPage() {
     reader.readAsDataURL(file);
   };
 
+  // All category names that already exist: built-in + admin-added
+  const existingNames = [...BUILTIN_CATEGORIES.map(c => c.label), ...categories.map(c => c.name)];
+
   const handleSaveCategory = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
-    if (!name.trim()) {
+    const trimmed = name.trim();
+    if (!trimmed) {
       setMessage("Please enter a category name.");
       return;
     }
-    const next = [...categories, { name: name.trim(), image }];
+    if (existingNames.some(n => n.toLowerCase() === trimmed.toLowerCase())) {
+      setMessage(`"${trimmed}" already exists — no need to add it again.`);
+      return;
+    }
+    const next = [...categories, { name: trimmed, image }];
     setCategories(next);
     localStorage.setItem("nd_categories", JSON.stringify(next));
     setName("");
@@ -118,8 +126,18 @@ export default function AdminPage() {
           <form onSubmit={handleSaveCategory} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Household"
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Household" list="category-suggestions"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
+              <datalist id="category-suggestions">
+                {existingNames.map((n, i) => <option key={i} value={n} />)}
+              </datalist>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="text-xs text-gray-400 mr-1">Already exists:</span>
+                {existingNames.map((n, i) => (
+                  <button key={i} type="button" onClick={() => setName(n)}
+                    className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer">{n}</button>
+                ))}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Image</label>
