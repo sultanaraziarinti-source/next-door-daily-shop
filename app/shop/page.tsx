@@ -13,7 +13,7 @@ import CartSidebar from "@/components/CartSidebar";
 import ProductCard from "@/components/ProductCard";
 import Toast from "@/components/Toast";
 
-type Filter = "all" | "household" | "kids" | "decoration";
+type Filter = string; // "all" | built-in keys | custom category names
 type Sort = "default" | "price-asc" | "price-desc" | "name";
 
 function ShopContent() {
@@ -28,9 +28,13 @@ function ShopContent() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
+  const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
-  useEffect(() => { setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]")); }, []);
+  useEffect(() => {
+    setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+    setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+  }, []);
 
   const filtered = useMemo(() => {
     // Map an admin item's category to a filter key, tolerating any form:
@@ -74,6 +78,8 @@ function ShopContent() {
     { key: "household",  label: "🏠 Household" },
     { key: "kids",       label: "🧸 Kids" },
     { key: "decoration", label: "✨ Decoration" },
+    // Custom categories added from the admin page get their own filter
+    ...customCategories.map(c => ({ key: c.name, label: `🏷️ ${c.name}` })),
   ];
 
   return (
