@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { PRODUCTS } from "@/lib/products";
+import { Product } from "@/lib/types";
+import { BUILTIN_CATEGORIES } from "@/lib/categories";
 import Navbar from "@/components/Navbar";
 import MobileDrawer from "@/components/MobileDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -18,8 +20,6 @@ const CATEGORIES = [
   { key: "decoration",label: "Decoration Items", icon: "✨", gradient: "linear-gradient(135deg,#4facfe,#00f2fe)", count: 6 },
 ];
 
-const featured = PRODUCTS.filter(p => p.badge === "popular" || p.badge === "sale").slice(0, 8);
-
 export default function HomePage() {
   const { user } = useAuth();
   const { clearCart, cartTotal } = useCart();
@@ -27,12 +27,31 @@ export default function HomePage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
   const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
+  const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
   useEffect(() => {
     setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+    setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
   }, []);
   if (!user) return null;
+
+  // Turn admin-added items into product cards for the Featured section
+  const normalize = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
+  const keyFor = (label: string) => {
+    const match = BUILTIN_CATEGORIES.find(c => normalize(c.label) === normalize(label) || c.key === normalize(label));
+    return (match ? match.key : label) as Product["category"];
+  };
+  const adminProducts: Product[] = adminItems.map((it, idx) => ({
+    id: 100000 + idx,
+    name: it.name,
+    category: keyFor(it.category),
+    emoji: "🛍️",
+    price: parseFloat(it.price) || 0,
+    oldPrice: null,
+    badge: null,
+    image: it.image || undefined,
+  }));
 
   const handleCheckout = () => {
     const total = cartTotal;
@@ -111,8 +130,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured */}
-      {featured.length > 0 && (
+      {/* Featured — admin-added items */}
+      {adminProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 pb-16">
           <div className="text-center mb-10">
             <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#fff0eb", color: "#FF6B35" }}>Hand-Picked</span>
@@ -120,7 +139,7 @@ export default function HomePage() {
             <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {featured.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
+            {adminProducts.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
           </div>
           <div className="text-center mt-10">
             <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
