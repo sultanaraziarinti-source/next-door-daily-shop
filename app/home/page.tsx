@@ -90,7 +90,7 @@ export default function HomePage() {
               <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
                 <div className="text-4xl mb-3">{c.icon}</div>
                 <h3 className="text-white font-black text-xl">{c.label}</h3>
-                <p className="text-white/70 text-sm">{c.count} products available</p>
+                <p className="text-white/70 text-sm">{PRODUCTS.filter(p => p.category === c.key).length} products available</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>
@@ -112,21 +112,23 @@ export default function HomePage() {
       </section>
 
       {/* Featured */}
-      <section className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="text-center mb-10">
-          <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#fff0eb", color: "#FF6B35" }}>Hand-Picked</span>
-          <h2 className="mt-3 text-3xl font-black text-gray-800">Featured <span style={{ color: "#FF6B35" }}>Products</span></h2>
-          <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {featured.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
-        </div>
-        <div className="text-center mt-10">
-          <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
-            View All Products →
-          </Link>
-        </div>
-      </section>
+      {featured.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-16">
+          <div className="text-center mb-10">
+            <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#fff0eb", color: "#FF6B35" }}>Hand-Picked</span>
+            <h2 className="mt-3 text-3xl font-black text-gray-800">Featured <span style={{ color: "#FF6B35" }}>Products</span></h2>
+            <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {featured.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
+          </div>
+          <div className="text-center mt-10">
+            <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
+              View All Products →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Promo */}
       <section className="max-w-7xl mx-auto px-6 pb-20">
