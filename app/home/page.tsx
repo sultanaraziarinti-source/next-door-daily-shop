@@ -131,23 +131,25 @@ export default function HomePage() {
       </section>
 
       {/* Featured — admin-added items */}
-      {adminProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pb-16">
-          <div className="text-center mb-10">
-            <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#fff0eb", color: "#FF6B35" }}>Hand-Picked</span>
-            <h2 className="mt-3 text-3xl font-black text-gray-800">Featured <span style={{ color: "#FF6B35" }}>Products</span></h2>
-            <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
-          </div>
+      <section className="max-w-7xl mx-auto px-6 pb-16">
+        <div className="text-center mb-10">
+          <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: "#fff0eb", color: "#FF6B35" }}>Hand-Picked</span>
+          <h2 className="mt-3 text-3xl font-black text-gray-800">Featured <span style={{ color: "#FF6B35" }}>Products</span></h2>
+          <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
+        </div>
+        {adminProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {adminProducts.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
           </div>
-          <div className="text-center mt-10">
-            <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
-              View All Products →
-            </Link>
-          </div>
-        </section>
-      )}
+        ) : (
+          <p className="text-center text-gray-400">No products yet — add items from the admin panel.</p>
+        )}
+        <div className="text-center mt-10">
+          <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
+            View All Products →
+          </Link>
+        </div>
+      </section>
 
       {/* Promo */}
       <section className="max-w-7xl mx-auto px-6 pb-20">
