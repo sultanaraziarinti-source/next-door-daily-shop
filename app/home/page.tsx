@@ -26,7 +26,7 @@ export default function HomePage() {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
-  const [customCategories, setCustomCategories] = useState<{ name: string; type: string; image: string }[]>([]);
+  const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
   useEffect(() => { setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]")); }, []);
@@ -102,7 +102,6 @@ export default function HomePage() {
               <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.6))" }} />
               <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
                 <h3 className="text-white font-black text-xl capitalize">{c.name}</h3>
-                <p className="text-white/70 text-sm">{c.type}</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>

@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BUILTIN_CATEGORIES } from "@/lib/categories";
 
 interface Category {
   name: string;
-  type: string;
   image: string; // data URL
 }
 
@@ -24,7 +24,6 @@ export default function AdminPage() {
 
   // Add Category form
   const [name, setName] = useState("");
-  const [type, setType] = useState("");
   const [image, setImage] = useState("");
   const [message, setMessage] = useState("");
 
@@ -61,15 +60,14 @@ export default function AdminPage() {
   const handleSaveCategory = (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
-    if (!name.trim() || !type.trim()) {
-      setMessage("Please enter a category name and type.");
+    if (!name.trim()) {
+      setMessage("Please enter a category name.");
       return;
     }
-    const next = [...categories, { name: name.trim(), type: type.trim(), image }];
+    const next = [...categories, { name: name.trim(), image }];
     setCategories(next);
     localStorage.setItem("nd_categories", JSON.stringify(next));
     setName("");
-    setType("");
     setImage("");
     setMessage("Category saved ✓");
   };
@@ -124,11 +122,6 @@ export default function AdminPage() {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type Category</label>
-              <input type="text" value={type} onChange={e => setType(e.target.value)} placeholder="e.g. Essentials"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
-            </div>
-            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Image</label>
               <input type="file" accept="image/*" onChange={e => readImage(e, setImage)}
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-[#FF6B35] hover:file:bg-orange-100 cursor-pointer" />
@@ -149,11 +142,14 @@ export default function AdminPage() {
           <form onSubmit={handleSaveItem} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-              <select value={itemCategory} onChange={e => setItemCategory(e.target.value)} disabled={categories.length === 0}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white disabled:bg-gray-100 disabled:text-gray-400">
-                <option value="">{categories.length === 0 ? "Add a category above first…" : "Select a category…"}</option>
+              <select value={itemCategory} onChange={e => setItemCategory(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white">
+                <option value="">Select a category…</option>
+                {BUILTIN_CATEGORIES.map(c => (
+                  <option key={c.key} value={c.label}>{c.label}</option>
+                ))}
                 {categories.map((c, i) => (
-                  <option key={i} value={c.name}>{c.name}</option>
+                  <option key={`custom-${i}`} value={c.name}>{c.name}</option>
                 ))}
               </select>
             </div>
