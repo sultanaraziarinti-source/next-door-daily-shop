@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { PRODUCTS } from "@/lib/products";
+import { Product } from "@/lib/types";
 import Navbar from "@/components/Navbar";
 import MobileDrawer from "@/components/MobileDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -22,15 +23,30 @@ const featured = PRODUCTS.filter(p => p.badge === "popular" || p.badge === "sale
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { clearCart, cartTotal } = useCart();
+  const { clearCart, cartTotal, addToCart } = useCart();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
   const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
+  const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
-  useEffect(() => { setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]")); }, []);
+  useEffect(() => {
+    setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+    setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+  }, []);
   if (!user) return null;
+
+  // Category labels that actually have admin-added items, in display order
+  const orderedLabels = [...CATEGORIES.map(c => c.label), ...customCategories.map(c => c.name)];
+  const extraLabels = [...new Set(adminItems.map(it => it.category))].filter(c => !orderedLabels.includes(c));
+  const categoriesWithItems = [...orderedLabels, ...extraLabels].filter(label => adminItems.some(it => it.category === label));
+
+  const addAdminItem = (it: { name: string; category: string; image: string; price: string }, idx: number) => {
+    const product: Product = { id: 100000 + idx, name: it.name, category: "household", emoji: "🛍️", price: parseFloat(it.price) || 0, oldPrice: null, badge: null };
+    addToCart(product);
+    setToast({ msg: `🛍️ ${it.name} added to cart!` });
+  };
 
   const handleCheckout = () => {
     const total = cartTotal;
@@ -108,6 +124,36 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Admin-added items grouped by their selected category */}
+      {categoriesWithItems.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 pb-4">
+          {categoriesWithItems.map(label => (
+            <div key={label} className="mb-12">
+              <h2 className="text-2xl font-black text-gray-800 mb-5 capitalize">{label}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {adminItems.map((it, idx) => ({ it, idx })).filter(x => x.it.category === label).map(({ it, idx }) => (
+                  <div key={idx} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <div className="bg-gray-50 flex items-center justify-center" style={{ minHeight: "140px" }}>
+                      {it.image
+                        ? <img src={it.image} alt={it.name} className="w-full h-36 object-cover" />
+                        : <span className="text-6xl">🛍️</span>}
+                    </div>
+                    <div className="p-4 flex flex-col flex-1">
+                      <span className="text-xs font-semibold text-gray-400 mb-1 capitalize">{it.category}</span>
+                      <p className="font-bold text-gray-800 text-sm mb-2 leading-snug">{it.name}</p>
+                      <div className="flex items-center justify-between mt-auto pt-2">
+                        <span className="font-black text-lg" style={{ color: "#FF6B35" }}>${(parseFloat(it.price) || 0).toFixed(2)}</span>
+                        <button onClick={() => addAdminItem(it, idx)} className="w-9 h-9 rounded-full text-white font-bold text-xl flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer" style={{ background: "#FF6B35" }}>+</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Featured */}
       <section className="max-w-7xl mx-auto px-6 pb-16">
