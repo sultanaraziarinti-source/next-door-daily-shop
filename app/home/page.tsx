@@ -145,7 +145,7 @@ export default function HomePage() {
           <p className="text-center text-gray-400">No products yet — add items from the admin panel.</p>
         )}
         <div className="text-center mt-10">
-          <Link href="/shop" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
+          <Link href="/shop?cat=all" className="inline-block px-10 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
             View All Products →
           </Link>
         </div>

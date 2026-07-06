@@ -35,6 +35,8 @@ function ShopContent() {
     setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
     setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
   }, []);
+  // Keep the active filter in sync with the ?cat= URL (so "View All Products" resets to all)
+  useEffect(() => { setFilter((searchParams.get("cat") as Filter) || "all"); }, [searchParams]);
 
   const filtered = useMemo(() => {
     // Map an admin item's category to a filter key, tolerating any form:
