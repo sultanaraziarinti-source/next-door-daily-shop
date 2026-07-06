@@ -6,6 +6,7 @@ export interface Product {
   price: number;
   oldPrice: number | null;
   badge: "popular" | "sale" | "new" | null;
+  image?: string; // optional uploaded image (data URL) for admin-added items
 }
 
 export interface CartItem extends Product {

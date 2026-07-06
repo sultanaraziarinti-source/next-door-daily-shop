@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { PRODUCTS } from "@/lib/products";
+import { Product } from "@/lib/types";
+import { BUILTIN_CATEGORIES } from "@/lib/categories";
 import Navbar from "@/components/Navbar";
 import MobileDrawer from "@/components/MobileDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -25,18 +27,32 @@ function ShopContent() {
   const [sort, setSort] = useState<Sort>("default");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
 
   useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
+  useEffect(() => { setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]")); }, []);
 
   const filtered = useMemo(() => {
-    let list = [...PRODUCTS];
+    // Map admin item category labels (e.g. "Household Items") to filter keys ("household")
+    const labelToKey: Record<string, string> = Object.fromEntries(BUILTIN_CATEGORIES.map(c => [c.label, c.key]));
+    const adminProducts: Product[] = adminItems.map((it, idx) => ({
+      id: 100000 + idx,
+      name: it.name,
+      category: (labelToKey[it.category] ?? it.category) as Product["category"],
+      emoji: "🛍️",
+      price: parseFloat(it.price) || 0,
+      oldPrice: null,
+      badge: null,
+      image: it.image || undefined,
+    }));
+    let list = [...PRODUCTS, ...adminProducts];
     if (filter !== "all") list = list.filter(p => p.category === filter);
     if (search) list = list.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
     if (sort === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [filter, sort, search]);
+  }, [filter, sort, search, adminItems]);
 
   if (!user) return null;
 

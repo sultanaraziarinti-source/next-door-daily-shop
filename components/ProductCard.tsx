@@ -30,13 +30,14 @@ export default function ProductCard({ product: p, onToast }: Props) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
-      <div className="relative bg-gray-50 flex items-center justify-center" style={{ minHeight: "140px" }}>
+      <div className="relative bg-gray-50 flex items-center justify-center overflow-hidden" style={{ minHeight: "140px" }}>
+        {p.image && <img src={p.image} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />}
         {p.badge && (
-          <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold ${BADGE_STYLES[p.badge]}`}>
+          <span className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-xs font-bold ${BADGE_STYLES[p.badge]}`}>
             {BADGE_LABEL[p.badge]}
           </span>
         )}
-        <span className="text-6xl">{p.emoji}</span>
+        {!p.image && <span className="text-6xl">{p.emoji}</span>}
       </div>
       <div className="p-4 flex flex-col flex-1">
         <span className="text-xs font-semibold text-gray-400 mb-1">{CAT_LABEL[p.category]}</span>
