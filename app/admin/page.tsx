@@ -78,20 +78,24 @@ export default function AdminPage() {
       const img = new Image();
       img.onload = () => {
         try {
-          const MAX = 600;
-          let { width, height } = img;
-          if (width > height && width > MAX) { height = Math.round((height * MAX) / width); width = MAX; }
-          else if (height > MAX) { width = Math.round((width * MAX) / height); height = MAX; }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
+          // Compress to a JPEG at a given max dimension + quality
+          const compress = (maxDim: number, quality: number) => {
+            let { width, height } = img;
+            if (width > height && width > maxDim) { height = Math.round((height * maxDim) / width); width = maxDim; }
+            else if (height > maxDim) { width = Math.round((width * maxDim) / height); height = maxDim; }
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return null;
             ctx.drawImage(img, 0, 0, width, height);
-            setter(canvas.toDataURL("image/jpeg", 0.7));
-          } else {
-            setter(original);
-          }
+            return canvas.toDataURL("image/jpeg", quality);
+          };
+          // Keep each stored image small (~<80KB) so many items fit in localStorage
+          let out = compress(500, 0.6);
+          if (out && out.length > 110000) out = compress(400, 0.5);
+          if (out && out.length > 110000) out = compress(320, 0.45);
+          setter(out || original);
         } catch {
           setter(original);
         } finally {
@@ -158,7 +162,7 @@ export default function AdminPage() {
     try {
       localStorage.setItem("nd_items", JSON.stringify(next));
     } catch {
-      setItemMessage("Could not save — the image is too large for browser storage. Try a smaller image.");
+      setItemMessage("Browser storage is full. Remove some older items (with images) below, then try again.");
       return;
     }
     setItems(next);
