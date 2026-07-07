@@ -54,7 +54,14 @@ export default function HomePage() {
     const match = BUILTIN_CATEGORIES.find(c => normalize(c.label) === normalize(label) || c.key === normalize(label));
     return (match ? match.key : label) as Product["category"];
   };
-  const adminProducts: Product[] = adminItems.map((it, idx) => ({
+  // Only feature items whose category still exists (built-in or a current custom category)
+  const builtinKeys = new Set<string>(BUILTIN_CATEGORIES.map(c => c.key));
+  const customNames = new Set<string>(customCategories.map(c => c.name.toLowerCase()));
+  const categoryExists = (rawCat: string) => {
+    const key = String(keyFor(rawCat)).toLowerCase();
+    return builtinKeys.has(key) || customNames.has(rawCat.toLowerCase()) || customNames.has(key);
+  };
+  const adminProducts: Product[] = adminItems.filter(it => categoryExists(it.category)).map((it, idx) => ({
     id: 100000 + idx,
     name: it.name,
     category: keyFor(it.category),
