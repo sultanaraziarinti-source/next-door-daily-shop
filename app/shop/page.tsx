@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { PRODUCTS } from "@/lib/products";
@@ -21,6 +21,7 @@ function ShopContent() {
   const { clearCart, cartTotal } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
   const [filter, setFilter] = useState<Filter>((searchParams.get("cat") as Filter) || "all");
@@ -140,7 +141,12 @@ function ShopContent() {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 overflow-x-auto">
           <span className="text-sm text-gray-500 font-medium flex-shrink-0 hidden md:block">Filter:</span>
           {FILTERS.map(f => (
-            <button key={f.key} onClick={() => { setFilter(f.key); router.replace(`/shop?cat=${encodeURIComponent(f.key)}`, { scroll: false }); }}
+            <button key={f.key} onClick={() => {
+                setFilter(f.key);
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("cat", f.key);
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              }}
               className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 transition-colors cursor-pointer ${filter === f.key ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               style={filter === f.key ? { background: "#FF6B35" } : {}}>
               {f.label}
