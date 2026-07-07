@@ -69,7 +69,7 @@ function ShopContent() {
       image: it.image || undefined,
     }));
     let list = [...PRODUCTS, ...adminProducts];
-    if (filter !== "all") list = list.filter(p => String(p.category).toLowerCase() === filter.toLowerCase());
+    if (filter !== "all") list = list.filter(p => p.category === filter);
     if (search) list = list.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
     if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
@@ -139,16 +139,13 @@ function ShopContent() {
       <div className="sticky top-16 z-20 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 overflow-x-auto">
           <span className="text-sm text-gray-500 font-medium flex-shrink-0 hidden md:block">Filter:</span>
-          {FILTERS.map(f => {
-            const active = filter.toLowerCase() === f.key.toLowerCase();
-            return (
+          {FILTERS.map(f => (
             <button key={f.key} onClick={() => { setFilter(f.key); router.replace(`/shop?cat=${encodeURIComponent(f.key)}`, { scroll: false }); }}
-              className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 transition-colors cursor-pointer ${active ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-              style={active ? { background: "#FF6B35" } : {}}>
+              className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 transition-colors cursor-pointer ${filter === f.key ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              style={filter === f.key ? { background: "#FF6B35" } : {}}>
               {f.label}
             </button>
-            );
-          })}
+          ))}
           <select value={sort} onChange={e => setSort(e.target.value as Sort)}
             className="ml-auto px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 focus:outline-none bg-white cursor-pointer flex-shrink-0">
             <option value="default">Sort: Default</option>
@@ -172,7 +169,7 @@ function ShopContent() {
           // Group products by category, each under its own heading
           <>
             {FILTERS.filter(f => f.key !== "all").map(f => {
-              const group = filtered.filter(p => String(p.category).toLowerCase() === f.key.toLowerCase());
+              const group = filtered.filter(p => p.category === f.key);
               if (group.length === 0) return null;
               return (
                 <div key={f.key} className="mb-10">
