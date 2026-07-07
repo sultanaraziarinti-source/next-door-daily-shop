@@ -19,7 +19,7 @@ export default function Navbar({ activePage, onHamburger }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleLogout = () => { logout(); router.push("/"); };
+  const handleLogout = async () => { await logout(); router.push("/"); };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${scrolled ? "shadow-lg" : ""}`}

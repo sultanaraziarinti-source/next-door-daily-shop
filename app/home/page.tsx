@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { PRODUCTS } from "@/lib/products";
 import { Product } from "@/lib/types";
 import { BUILTIN_CATEGORIES } from "@/lib/categories";
+import { getCategories, getItems } from "@/lib/db";
 import Navbar from "@/components/Navbar";
 import MobileDrawer from "@/components/MobileDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
@@ -33,18 +34,17 @@ export default function HomePage() {
 
   useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
-    const load = () => {
-      setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
-      setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+    const load = async () => {
+      const [cats, its] = await Promise.all([getCategories(), getItems()]);
+      setCustomCategories(cats.map(c => ({ name: c.name, image: c.image_url || "" })));
+      setAdminItems(its.map(it => ({ name: it.name, category: it.category, image: it.image_url || "", price: String(it.price) })));
     };
     load();
     const onVisible = () => { if (document.visibilityState === "visible") load(); };
     window.addEventListener("focus", load);
-    window.addEventListener("storage", load);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.removeEventListener("focus", load);
-      window.removeEventListener("storage", load);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);

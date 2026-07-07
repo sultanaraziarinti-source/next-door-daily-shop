@@ -3,218 +3,128 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BUILTIN_CATEGORIES } from "@/lib/categories";
-
-interface Category {
-  name: string;
-  image: string; // data URL
-}
-
-interface Item {
-  name: string;
-  category: string;
-  image: string; // data URL
-  price: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import {
+  getCategories, getItems, upsertCategory, deleteCategory,
+  addItem, deleteItemByName, deleteItemsByCategory, uploadImage,
+  DbCategory, DbItem,
+} from "@/lib/db";
 
 export default function AdminPage() {
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
+  const { isAdmin, loading, logout } = useAuth();
+  const [ready, setReady] = useState(false);
+  const [categories, setCategories] = useState<DbCategory[]>([]);
+  const [items, setItems] = useState<DbItem[]>([]);
 
   // Add Category form
   const [name, setName] = useState("");
-  const [image, setImage] = useState("");
+  const [catFile, setCatFile] = useState<File | null>(null);
+  const [catPreview, setCatPreview] = useState("");
   const [message, setMessage] = useState("");
+  const [savingCat, setSavingCat] = useState(false);
 
   // Add Item form
   const [itemCategory, setItemCategory] = useState("");
   const [itemName, setItemName] = useState("");
-  const [itemImage, setItemImage] = useState("");
+  const [itemFile, setItemFile] = useState<File | null>(null);
+  const [itemPreview, setItemPreview] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [itemMessage, setItemMessage] = useState("");
+  const [savingItem, setSavingItem] = useState(false);
 
   // Remove form
   const [removeType, setRemoveType] = useState("");
   const [removeName, setRemoveName] = useState("");
   const [removeMessage, setRemoveMessage] = useState("");
+  const [removing, setRemoving] = useState(false);
 
-  // True while an uploaded image is being compressed
-  const [imgProcessing, setImgProcessing] = useState(false);
+  const load = async () => {
+    const [cats, its] = await Promise.all([getCategories(), getItems()]);
+    setCategories(cats);
+    setItems(its);
+  };
 
   useEffect(() => {
-    if (localStorage.getItem("nd_admin") !== "true") {
-      router.replace("/admin/login");
-      return;
-    }
-    // Load categories, removing any duplicate entries (case-insensitive, keep the latest)
-    const rawCats: { name: string; image: string }[] = JSON.parse(localStorage.getItem("nd_categories") || "[]");
-    const dedupMap = new Map<string, { name: string; image: string }>();
-    for (const c of rawCats) dedupMap.set(c.name.toLowerCase(), c);
-    const dedupedCats = [...dedupMap.values()];
-    if (dedupedCats.length !== rawCats.length) localStorage.setItem("nd_categories", JSON.stringify(dedupedCats));
-    setCategories(dedupedCats);
-    setItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
-    setChecked(true);
-  }, [router]);
+    if (loading) return;
+    if (!isAdmin) { router.replace("/admin/login"); return; }
+    load().finally(() => setReady(true));
+  }, [loading, isAdmin, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("nd_admin");
-    router.push("/admin/login");
-  };
+  const handleLogout = async () => { await logout(); router.push("/admin/login"); };
 
-  // Read an image, downscale + compress it (so it fits in localStorage), and return a data URL.
-  // Always finishes (resets the processing flag) and always captures the image, even if
-  // compression fails — falling back to the original file data.
-  const readImage = (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void) => {
+  const pickImage = (e: React.ChangeEvent<HTMLInputElement>, setFile: (f: File | null) => void, setPreview: (v: string) => void) => {
     const file = e.target.files?.[0];
-    // Allow re-selecting the same file later by clearing the input value
     e.target.value = "";
     if (!file) return;
-    setImgProcessing(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const original = reader.result as string;
-      const img = new Image();
-      img.onload = () => {
-        try {
-          // Compress to a JPEG at a given max dimension + quality
-          const compress = (maxDim: number, quality: number) => {
-            let { width, height } = img;
-            if (width > height && width > maxDim) { height = Math.round((height * maxDim) / width); width = maxDim; }
-            else if (height > maxDim) { width = Math.round((width * maxDim) / height); height = maxDim; }
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return null;
-            ctx.drawImage(img, 0, 0, width, height);
-            return canvas.toDataURL("image/jpeg", quality);
-          };
-          // Keep each stored image small (~<80KB) so many items fit in localStorage
-          let out = compress(500, 0.6);
-          if (out && out.length > 110000) out = compress(400, 0.5);
-          if (out && out.length > 110000) out = compress(320, 0.45);
-          setter(out || original);
-        } catch {
-          setter(original);
-        } finally {
-          setImgProcessing(false);
-        }
-      };
-      img.onerror = () => { setter(original); setImgProcessing(false); };
-      img.src = original;
-    };
-    reader.onerror = () => setImgProcessing(false);
-    reader.readAsDataURL(file);
+    setFile(file);
+    setPreview(URL.createObjectURL(file));
   };
 
-  // All category names that already exist: built-in + admin-added, de-duplicated (case-insensitive)
-  const seenNames = new Set<string>();
-  const existingNames = [...BUILTIN_CATEGORIES.map(c => c.label), ...categories.map(c => c.name)].filter(n => {
-    const key = n.toLowerCase();
-    if (seenNames.has(key)) return false;
-    seenNames.add(key);
-    return true;
-  });
+  const existingNames = [...BUILTIN_CATEGORIES.map(c => c.label), ...categories.map(c => c.name)]
+    .filter((n, i, arr) => arr.findIndex(x => x.toLowerCase() === n.toLowerCase()) === i);
 
-  const handleSaveCategory = (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
     const trimmed = name.trim();
-    if (!trimmed) {
-      setMessage("Please enter a category name.");
-      return;
-    }
-    if (imgProcessing) {
-      setMessage("Please wait — the image is still loading.");
-      return;
-    }
-    // Upsert: if the category already exists (built-in or custom), update its image
-    const idx = categories.findIndex(c => c.name.toLowerCase() === trimmed.toLowerCase());
-    const next = idx >= 0
-      ? categories.map((c, i) => (i === idx ? { name: c.name, image } : c))
-      : [...categories, { name: trimmed, image }];
+    if (!trimmed) { setMessage("Please enter a category name."); return; }
+    setSavingCat(true);
     try {
-      localStorage.setItem("nd_categories", JSON.stringify(next));
-    } catch {
-      setMessage("Could not save — the image is too large for browser storage. Try a smaller image.");
-      return;
-    }
-    setCategories(next);
-    setName("");
-    setImage("");
-    setMessage(idx >= 0 ? "Category image updated ✓" : "Category saved ✓");
+      const existing = categories.find(c => c.name.toLowerCase() === trimmed.toLowerCase());
+      const imageUrl = catFile ? await uploadImage(catFile) : (existing?.image_url ?? null);
+      await upsertCategory(trimmed, imageUrl);
+      setName(""); setCatFile(null); setCatPreview("");
+      setMessage("Category saved ✓");
+      await load();
+    } catch (err) {
+      setMessage((err as Error).message || "Could not save category.");
+    } finally { setSavingCat(false); }
   };
 
-  const handleSaveItem = (e: React.FormEvent) => {
+  const handleSaveItem = async (e: React.FormEvent) => {
     e.preventDefault();
     setItemMessage("");
     if (!itemCategory.trim() || !itemName.trim() || !itemPrice.trim()) {
       setItemMessage("Please choose a category and enter an item name and price.");
       return;
     }
-    if (imgProcessing) {
-      setItemMessage("Please wait — the image is still loading.");
-      return;
-    }
-    const next = [...items, { name: itemName.trim(), category: itemCategory, image: itemImage, price: itemPrice.trim() }];
+    setSavingItem(true);
     try {
-      localStorage.setItem("nd_items", JSON.stringify(next));
-    } catch {
-      setItemMessage("Browser storage is full. Remove some older items (with images) below, then try again.");
-      return;
-    }
-    setItems(next);
-    setItemName("");
-    setItemImage("");
-    setItemPrice("");
-    setItemMessage("Item saved ✓");
+      const imageUrl = itemFile ? await uploadImage(itemFile) : null;
+      await addItem({ name: itemName.trim(), category: itemCategory, price: parseFloat(itemPrice) || 0, imageUrl });
+      setItemName(""); setItemFile(null); setItemPreview(""); setItemPrice("");
+      setItemMessage("Item saved ✓");
+      await load();
+    } catch (err) {
+      setItemMessage((err as Error).message || "Could not save item.");
+    } finally { setSavingItem(false); }
   };
 
-  const handleRemove = (e: React.FormEvent) => {
+  const handleRemove = async (e: React.FormEvent) => {
     e.preventDefault();
     setRemoveMessage("");
-    const target = removeName.trim().toLowerCase();
+    const target = removeName.trim();
     if (!removeType) { setRemoveMessage("Please choose what to remove."); return; }
     if (!target) { setRemoveMessage("Please enter the name to remove."); return; }
-    // Remove matching entries from the cart cache (nd_cart) too
-    const pruneCart = (names: string[]) => {
-      const cart = JSON.parse(localStorage.getItem("nd_cart") || "[]");
-      const nextCart = cart.filter((c: { name: string }) => !names.includes(c.name.toLowerCase()));
-      if (nextCart.length !== cart.length) localStorage.setItem("nd_cart", JSON.stringify(nextCart));
-    };
-
-    if (removeType === "category") {
-      const norm = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
-      const normTarget = norm(removeName.trim());
-      const nextCats = categories.filter(c => c.name.toLowerCase() !== target);
-      // Also remove every item that belongs to this category
-      const removedNames = items.filter(it => norm(it.category) === normTarget).map(it => it.name.toLowerCase());
-      const nextItems = items.filter(it => norm(it.category) !== normTarget);
-      const removedCat = nextCats.length !== categories.length;
-      const removedItems = nextItems.length !== items.length;
-      if (!removedCat && !removedItems) { setRemoveMessage(`No category named "${removeName.trim()}" found.`); return; }
-      try {
-        localStorage.setItem("nd_categories", JSON.stringify(nextCats));
-        localStorage.setItem("nd_items", JSON.stringify(nextItems));
-      } catch { setRemoveMessage("Could not update storage."); return; }
-      pruneCart(removedNames);
-      setCategories(nextCats);
-      setItems(nextItems);
-      setRemoveMessage(removedItems ? "Category and its items removed ✓" : "Category removed ✓");
-    } else {
-      const next = items.filter(it => it.name.toLowerCase() !== target);
-      if (next.length === items.length) { setRemoveMessage(`No item named "${removeName.trim()}" found.`); return; }
-      try { localStorage.setItem("nd_items", JSON.stringify(next)); } catch { setRemoveMessage("Could not update storage."); return; }
-      pruneCart([target]);
-      setItems(next);
-      setRemoveMessage("Item removed ✓");
-    }
-    setRemoveName("");
+    setRemoving(true);
+    try {
+      if (removeType === "category") {
+        await deleteItemsByCategory(target);
+        await deleteCategory(target);
+        setRemoveMessage("Category and its items removed ✓");
+      } else {
+        await deleteItemByName(target);
+        setRemoveMessage("Item removed ✓");
+      }
+      setRemoveName("");
+      await load();
+    } catch (err) {
+      setRemoveMessage((err as Error).message || "Could not remove.");
+    } finally { setRemoving(false); }
   };
 
-  if (!checked) return null;
+  if (loading || !ready) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -235,7 +145,7 @@ export default function AdminPage() {
         <h1 className="text-3xl font-black text-gray-800 mb-1">Admin Dashboard</h1>
         <p className="text-gray-500 mb-8">Welcome back, administrator 👋</p>
 
-        {/* Add Category section */}
+        {/* Add Category */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
           <h2 className="font-bold text-gray-800 text-lg mb-5">Add Category</h2>
           {message && (
@@ -259,17 +169,17 @@ export default function AdminPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Image</label>
-              <input type="file" accept="image/*" onChange={e => readImage(e, setImage)}
+              <input type="file" accept="image/*" onChange={e => pickImage(e, setCatFile, setCatPreview)}
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-[#FF6B35] hover:file:bg-orange-100 cursor-pointer" />
-              {image && <img src={image} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
+              {catPreview && <img src={catPreview} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
             </div>
-            <button type="submit" disabled={imgProcessing} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: "#FF6B35" }}>
-              {imgProcessing ? "Processing image…" : "Save"}
+            <button type="submit" disabled={savingCat} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: "#FF6B35" }}>
+              {savingCat ? "Saving…" : "Save"}
             </button>
           </form>
         </section>
 
-        {/* Add Item section */}
+        {/* Add Item */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
           <h2 className="font-bold text-gray-800 text-lg mb-5">Add Item</h2>
           {itemMessage && (
@@ -281,14 +191,10 @@ export default function AdminPage() {
               <select value={itemCategory} onChange={e => setItemCategory(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white">
                 <option value="">Select a category…</option>
-                {BUILTIN_CATEGORIES.map(c => (
-                  <option key={c.key} value={c.label}>{c.label}</option>
-                ))}
+                {BUILTIN_CATEGORIES.map(c => <option key={c.key} value={c.label}>{c.label}</option>)}
                 {categories
                   .filter(c => !BUILTIN_CATEGORIES.some(b => b.label.toLowerCase() === c.name.toLowerCase()))
-                  .map((c, i) => (
-                    <option key={`custom-${i}`} value={c.name}>{c.name}</option>
-                  ))}
+                  .map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>
@@ -298,9 +204,9 @@ export default function AdminPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Item Image</label>
-              <input type="file" accept="image/*" onChange={e => readImage(e, setItemImage)}
+              <input type="file" accept="image/*" onChange={e => pickImage(e, setItemFile, setItemPreview)}
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-[#FF6B35] hover:file:bg-orange-100 cursor-pointer" />
-              {itemImage && <img src={itemImage} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
+              {itemPreview && <img src={itemPreview} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (৳)</label>
@@ -310,13 +216,13 @@ export default function AdminPage() {
                   className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
               </div>
             </div>
-            <button type="submit" disabled={imgProcessing} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: "#FF6B35" }}>
-              {imgProcessing ? "Processing image…" : "Save"}
+            <button type="submit" disabled={savingItem} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: "#FF6B35" }}>
+              {savingItem ? "Saving…" : "Save"}
             </button>
           </form>
         </section>
 
-        {/* Remove Category or Item section */}
+        {/* Remove Category or Item */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
           <h2 className="font-bold text-gray-800 text-lg mb-5">Remove Category or Item</h2>
           {removeMessage && (
@@ -343,8 +249,8 @@ export default function AdminPage() {
                 </datalist>
               </div>
             )}
-            <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#EF4444" }}>
-              Remove
+            <button type="submit" disabled={removing} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: "#EF4444" }}>
+              {removing ? "Removing…" : "Remove"}
             </button>
           </form>
         </section>
@@ -356,10 +262,10 @@ export default function AdminPage() {
             <p className="text-gray-500 text-sm">No items added yet.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {items.map((it, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  {it.image ? (
-                    <img src={it.image} alt={it.name} className="w-full h-32 object-cover" />
+              {items.map(it => (
+                <div key={it.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  {it.image_url ? (
+                    <img src={it.image_url} alt={it.name} className="w-full h-32 object-cover" />
                   ) : (
                     <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No image</div>
                   )}

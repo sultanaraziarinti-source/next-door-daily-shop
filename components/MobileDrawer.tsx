@@ -9,7 +9,7 @@ export default function MobileDrawer({ open, onClose }: Props) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => { logout(); onClose(); router.push("/"); };
+  const handleLogout = async () => { await logout(); onClose(); router.push("/"); };
 
   return (
     <>

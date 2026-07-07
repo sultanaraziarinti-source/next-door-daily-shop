@@ -2,24 +2,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const ADMIN_EMAIL = "rinti@gmail.com";
-const ADMIN_PASSWORD = "password";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      setError("Invalid admin credentials.");
+    setBusy(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (error || !data.user) { setBusy(false); setError("Invalid admin credentials."); return; }
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", data.user.id).single();
+    setBusy(false);
+    if (!profile?.is_admin) {
+      await supabase.auth.signOut();
+      setError("This account is not an admin.");
       return;
     }
-    localStorage.setItem("nd_admin", "true");
     router.push("/admin");
   };
 
@@ -59,8 +63,8 @@ export default function AdminLoginPage() {
                   className="w-full pl-10 pr-4 py-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
               </div>
             </div>
-            <button type="submit" className="w-full py-3.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
-              Sign In as Admin →
+            <button type="submit" disabled={busy} className="w-full py-3.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: "#FF6B35" }}>
+              {busy ? "Signing in…" : "Sign In as Admin →"}
             </button>
           </form>
           <div className="mt-6 text-center text-sm text-gray-500">

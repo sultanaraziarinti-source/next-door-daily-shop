@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -11,16 +12,18 @@ export default function SignupPage() {
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!form.firstName || !form.lastName || !form.email || !form.password) { setError("Please fill in all fields."); return; }
     if (form.password.length < 6) { setError("Password must be at least 6 characters."); return; }
     if (form.password !== form.confirm) { setError("Passwords do not match."); return; }
-    const users = JSON.parse(localStorage.getItem("nd_users") || "[]");
-    if (users.find((u: { email: string }) => u.email === form.email.toLowerCase())) { setError("Account with this email already exists."); return; }
-    users.push({ ...form, email: form.email.toLowerCase() });
-    localStorage.setItem("nd_users", JSON.stringify(users));
+    const { error } = await supabase.auth.signUp({
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+      options: { data: { full_name: `${form.firstName.trim()} ${form.lastName.trim()}` } },
+    });
+    if (error) { setError(error.message); return; }
     if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
       (window as any).gtag("event", "sign_up", { method: "email" });
     setSuccess(true);

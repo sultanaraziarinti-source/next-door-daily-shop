@@ -3,25 +3,27 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (user) router.replace("/home");
   }, [user, router]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const users = JSON.parse(localStorage.getItem("nd_users") || "[]");
-    const found = users.find((u: { email: string; password: string; firstName: string; lastName: string }) => u.email === email.toLowerCase() && u.password === password);
-    if (!found) { setError("Invalid email or password."); return; }
-    login({ name: `${found.firstName} ${found.lastName}`, email: found.email, initials: (found.firstName[0] + found.lastName[0]).toUpperCase() });
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    setBusy(false);
+    if (error) { setError("Invalid email or password."); return; }
     router.push("/home");
   };
 
@@ -61,8 +63,8 @@ export default function LoginPage() {
                   className="w-full pl-10 pr-4 py-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
               </div>
             </div>
-            <button type="submit" className="w-full py-3.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
-              Sign In →
+            <button type="submit" disabled={busy} className="w-full py-3.5 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: "#FF6B35" }}>
+              {busy ? "Signing in…" : "Sign In →"}
             </button>
           </form>
           <div className="mt-6 text-center text-sm text-gray-500">
