@@ -63,33 +63,43 @@ export default function AdminPage() {
     router.push("/admin/login");
   };
 
-  // Read an image, downscale + compress it (so it fits in localStorage), and return a data URL
+  // Read an image, downscale + compress it (so it fits in localStorage), and return a data URL.
+  // Always finishes (resets the processing flag) and always captures the image, even if
+  // compression fails — falling back to the original file data.
   const readImage = (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void) => {
     const file = e.target.files?.[0];
+    // Allow re-selecting the same file later by clearing the input value
+    e.target.value = "";
     if (!file) return;
     setImgProcessing(true);
     const reader = new FileReader();
     reader.onload = () => {
+      const original = reader.result as string;
       const img = new Image();
       img.onload = () => {
-        const MAX = 600;
-        let { width, height } = img;
-        if (width > height && width > MAX) { height = Math.round((height * MAX) / width); width = MAX; }
-        else if (height > MAX) { width = Math.round((width * MAX) / height); height = MAX; }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          setter(canvas.toDataURL("image/jpeg", 0.7));
-        } else {
-          setter(reader.result as string);
+        try {
+          const MAX = 600;
+          let { width, height } = img;
+          if (width > height && width > MAX) { height = Math.round((height * MAX) / width); width = MAX; }
+          else if (height > MAX) { width = Math.round((width * MAX) / height); height = MAX; }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            setter(canvas.toDataURL("image/jpeg", 0.7));
+          } else {
+            setter(original);
+          }
+        } catch {
+          setter(original);
+        } finally {
+          setImgProcessing(false);
         }
-        setImgProcessing(false);
       };
-      img.onerror = () => { setter(reader.result as string); setImgProcessing(false); };
-      img.src = reader.result as string;
+      img.onerror = () => { setter(original); setImgProcessing(false); };
+      img.src = original;
     };
     reader.onerror = () => setImgProcessing(false);
     reader.readAsDataURL(file);
