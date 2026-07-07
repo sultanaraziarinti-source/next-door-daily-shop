@@ -165,11 +165,21 @@ export default function AdminPage() {
     if (!removeType) { setRemoveMessage("Please choose what to remove."); return; }
     if (!target) { setRemoveMessage("Please enter the name to remove."); return; }
     if (removeType === "category") {
-      const next = categories.filter(c => c.name.toLowerCase() !== target);
-      if (next.length === categories.length) { setRemoveMessage(`No category named "${removeName.trim()}" found.`); return; }
-      try { localStorage.setItem("nd_categories", JSON.stringify(next)); } catch { setRemoveMessage("Could not update storage."); return; }
-      setCategories(next);
-      setRemoveMessage("Category removed ✓");
+      const norm = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
+      const normTarget = norm(removeName.trim());
+      const nextCats = categories.filter(c => c.name.toLowerCase() !== target);
+      // Also remove every item that belongs to this category
+      const nextItems = items.filter(it => norm(it.category) !== normTarget);
+      const removedCat = nextCats.length !== categories.length;
+      const removedItems = nextItems.length !== items.length;
+      if (!removedCat && !removedItems) { setRemoveMessage(`No category named "${removeName.trim()}" found.`); return; }
+      try {
+        localStorage.setItem("nd_categories", JSON.stringify(nextCats));
+        localStorage.setItem("nd_items", JSON.stringify(nextItems));
+      } catch { setRemoveMessage("Could not update storage."); return; }
+      setCategories(nextCats);
+      setItems(nextItems);
+      setRemoveMessage(removedItems ? "Category and its items removed ✓" : "Category removed ✓");
     } else {
       const next = items.filter(it => it.name.toLowerCase() !== target);
       if (next.length === items.length) { setRemoveMessage(`No item named "${removeName.trim()}" found.`); return; }
