@@ -39,6 +39,9 @@ export default function AdminPage() {
   const [removeName, setRemoveName] = useState("");
   const [removeMessage, setRemoveMessage] = useState("");
 
+  // True while an uploaded image is being compressed
+  const [imgProcessing, setImgProcessing] = useState(false);
+
   useEffect(() => {
     if (localStorage.getItem("nd_admin") !== "true") {
       router.replace("/admin/login");
@@ -64,6 +67,7 @@ export default function AdminPage() {
   const readImage = (e: React.ChangeEvent<HTMLInputElement>, setter: (v: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImgProcessing(true);
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
@@ -82,10 +86,12 @@ export default function AdminPage() {
         } else {
           setter(reader.result as string);
         }
+        setImgProcessing(false);
       };
-      img.onerror = () => setter(reader.result as string);
+      img.onerror = () => { setter(reader.result as string); setImgProcessing(false); };
       img.src = reader.result as string;
     };
+    reader.onerror = () => setImgProcessing(false);
     reader.readAsDataURL(file);
   };
 
@@ -104,6 +110,10 @@ export default function AdminPage() {
     const trimmed = name.trim();
     if (!trimmed) {
       setMessage("Please enter a category name.");
+      return;
+    }
+    if (imgProcessing) {
+      setMessage("Please wait — the image is still loading.");
       return;
     }
     // Upsert: if the category already exists (built-in or custom), update its image
@@ -128,6 +138,10 @@ export default function AdminPage() {
     setItemMessage("");
     if (!itemCategory.trim() || !itemName.trim() || !itemPrice.trim()) {
       setItemMessage("Please choose a category and enter an item name and price.");
+      return;
+    }
+    if (imgProcessing) {
+      setItemMessage("Please wait — the image is still loading.");
       return;
     }
     const next = [...items, { name: itemName.trim(), category: itemCategory, image: itemImage, price: itemPrice.trim() }];
@@ -215,8 +229,8 @@ export default function AdminPage() {
                 className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-[#FF6B35] hover:file:bg-orange-100 cursor-pointer" />
               {image && <img src={image} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
             </div>
-            <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
-              Save
+            <button type="submit" disabled={imgProcessing} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: "#FF6B35" }}>
+              {imgProcessing ? "Processing image…" : "Save"}
             </button>
           </form>
         </section>
@@ -262,8 +276,8 @@ export default function AdminPage() {
                   className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
               </div>
             </div>
-            <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
-              Save
+            <button type="submit" disabled={imgProcessing} className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: "#FF6B35" }}>
+              {imgProcessing ? "Processing image…" : "Save"}
             </button>
           </form>
         </section>
