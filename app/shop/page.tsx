@@ -81,7 +81,10 @@ function ShopContent() {
     { key: "kids",       label: "🧸 Kids" },
     { key: "decoration", label: "✨ Decoration" },
     // Custom categories added from the admin page get their own filter
-    ...customCategories.map(c => ({ key: c.name, label: `🏷️ ${c.name}` })),
+    // (exclude built-in categories, which already have their own filter above)
+    ...customCategories
+      .filter(c => !BUILTIN_CATEGORIES.some(b => b.label.toLowerCase() === c.name.toLowerCase()))
+      .map(c => ({ key: c.name, label: `🏷️ ${c.name}` })),
   ];
 
   return (
