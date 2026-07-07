@@ -113,7 +113,7 @@ export default function HomePage() {
               <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
                 {!uploaded && <div className="text-4xl mb-3">{c.icon}</div>}
                 <h3 className="text-white font-black text-xl">{c.label}</h3>
-                <p className="text-white/70 text-sm">{PRODUCTS.filter(p => p.category === c.key).length} products available</p>
+                <p className="text-white/70 text-sm">{PRODUCTS.filter(p => p.category === c.key).length + adminItems.filter(it => keyFor(it.category) === c.key).length} products available</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>
@@ -128,6 +128,7 @@ export default function HomePage() {
               <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.6))" }} />
               <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
                 <h3 className="text-white font-black text-xl capitalize">{c.name}</h3>
+                <p className="text-white/70 text-sm">{adminItems.filter(it => it.category.toLowerCase() === c.name.toLowerCase()).length} products available</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>
