@@ -28,6 +28,8 @@ export default function HomePage() {
   const [toast, setToast] = useState<{ msg: string; type?: "success" | "error" } | null>(null);
   const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
   const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
+  const [expanded, setExpanded] = useState<string[]>([]);
+  const toggleExpand = (key: string) => setExpanded(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
 
   useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
@@ -71,6 +73,16 @@ export default function HomePage() {
     badge: null,
     image: it.image || undefined,
   }));
+
+  // Featured products grouped by category (built-in first, then custom)
+  const featuredGroups = [
+    ...BUILTIN_CATEGORIES.map(c => ({ key: c.key, label: c.label })),
+    ...customCategories
+      .filter(c => !BUILTIN_CATEGORIES.some(b => b.label.toLowerCase() === c.name.toLowerCase()))
+      .map(c => ({ key: c.name, label: c.name })),
+  ]
+    .map(g => ({ ...g, products: adminProducts.filter(p => p.category === g.key) }))
+    .filter(g => g.products.length > 0);
 
   const handleCheckout = () => {
     const total = cartTotal;
@@ -162,10 +174,27 @@ export default function HomePage() {
           <h2 className="mt-3 text-3xl font-black text-gray-800">Featured <span style={{ color: "#FF6B35" }}>Products</span></h2>
           <p className="mt-2 text-gray-500">Our most-loved items chosen by thousands of happy shoppers.</p>
         </div>
-        {adminProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {adminProducts.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
-          </div>
+        {featuredGroups.length > 0 ? (
+          featuredGroups.map(g => {
+            const isExpanded = expanded.includes(g.key);
+            const shown = isExpanded ? g.products : g.products.slice(0, 6);
+            return (
+              <div key={g.key} className="mb-12">
+                <h3 className="text-2xl font-black text-gray-800 mb-5 capitalize">{g.label}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {shown.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
+                </div>
+                {g.products.length > 6 && (
+                  <div className="text-center mt-6">
+                    <button onClick={() => toggleExpand(g.key)}
+                      className="inline-block px-8 py-3 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#1E1E2E" }}>
+                      {isExpanded ? "See less" : `See more (${g.products.length - 6} more) →`}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
         ) : (
           <p className="text-center text-gray-400">No products yet — add items from the admin panel.</p>
         )}
