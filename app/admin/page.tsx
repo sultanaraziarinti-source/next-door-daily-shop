@@ -39,7 +39,13 @@ export default function AdminPage() {
       router.replace("/admin/login");
       return;
     }
-    setCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+    // Load categories, removing any duplicate entries (case-insensitive, keep the latest)
+    const rawCats: { name: string; image: string }[] = JSON.parse(localStorage.getItem("nd_categories") || "[]");
+    const dedupMap = new Map<string, { name: string; image: string }>();
+    for (const c of rawCats) dedupMap.set(c.name.toLowerCase(), c);
+    const dedupedCats = [...dedupMap.values()];
+    if (dedupedCats.length !== rawCats.length) localStorage.setItem("nd_categories", JSON.stringify(dedupedCats));
+    setCategories(dedupedCats);
     setItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
     setChecked(true);
   }, [router]);
