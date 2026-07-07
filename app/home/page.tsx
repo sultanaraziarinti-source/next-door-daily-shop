@@ -101,20 +101,25 @@ export default function HomePage() {
           <p className="mt-2 text-gray-500">Browse our handpicked collections for your daily life.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {CATEGORIES.map(c => (
+          {CATEGORIES.map(c => {
+            const uploaded = customCategories.find(cc => cc.name.toLowerCase() === c.label.toLowerCase())?.image;
+            return (
             <Link key={c.key} href={`/shop?cat=${c.key}`}
               className="relative rounded-2xl overflow-hidden cursor-pointer group shadow-md hover:-translate-y-2 transition-all duration-300" style={{ minHeight: "220px" }}>
-              <div className="absolute inset-0" style={{ background: c.gradient }} />
+              {uploaded
+                ? <img src={uploaded} alt={c.label} className="absolute inset-0 w-full h-full object-cover" />
+                : <div className="absolute inset-0" style={{ background: c.gradient }} />}
               <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.6))" }} />
               <div className="relative p-8 flex flex-col justify-end h-full" style={{ minHeight: "220px" }}>
-                <div className="text-4xl mb-3">{c.icon}</div>
+                {!uploaded && <div className="text-4xl mb-3">{c.icon}</div>}
                 <h3 className="text-white font-black text-xl">{c.label}</h3>
                 <p className="text-white/70 text-sm">{PRODUCTS.filter(p => p.category === c.key).length} products available</p>
                 <span className="mt-4 inline-flex items-center justify-center gap-2 text-white font-bold" style={{ background: "#FF6B35", padding: "11px 28px", borderRadius: "50px", fontSize: "15px", letterSpacing: "0.01em", boxShadow: "0 4px 14px rgba(255,107,53,0.4)" }}>Shop Now →</span>
               </div>
             </Link>
-          ))}
-          {customCategories.map((c, i) => (
+            );
+          })}
+          {customCategories.filter(c => !CATEGORIES.some(b => b.label.toLowerCase() === c.name.toLowerCase())).map((c, i) => (
             <Link key={`custom-${i}`} href={`/shop?cat=${encodeURIComponent(c.name.toLowerCase())}`}
               className="relative rounded-2xl overflow-hidden cursor-pointer group shadow-md hover:-translate-y-2 transition-all duration-300" style={{ minHeight: "220px" }}>
               {c.image

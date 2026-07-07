@@ -89,11 +89,11 @@ export default function AdminPage() {
       setMessage("Please enter a category name.");
       return;
     }
-    if (existingNames.some(n => n.toLowerCase() === trimmed.toLowerCase())) {
-      setMessage(`"${trimmed}" already exists — no need to add it again.`);
-      return;
-    }
-    const next = [...categories, { name: trimmed, image }];
+    // Upsert: if the category already exists (built-in or custom), update its image
+    const idx = categories.findIndex(c => c.name.toLowerCase() === trimmed.toLowerCase());
+    const next = idx >= 0
+      ? categories.map((c, i) => (i === idx ? { name: c.name, image } : c))
+      : [...categories, { name: trimmed, image }];
     try {
       localStorage.setItem("nd_categories", JSON.stringify(next));
     } catch {
@@ -103,7 +103,7 @@ export default function AdminPage() {
     setCategories(next);
     setName("");
     setImage("");
-    setMessage("Category saved ✓");
+    setMessage(idx >= 0 ? "Category image updated ✓" : "Category saved ✓");
   };
 
   const handleSaveItem = (e: React.FormEvent) => {
@@ -163,7 +163,7 @@ export default function AdminPage() {
                 {existingNames.map((n, i) => <option key={i} value={n} />)}
               </datalist>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="text-xs text-gray-400 mr-1">Already exists:</span>
+                <span className="text-xs text-gray-400 mr-1">Pick one to set its image:</span>
                 {existingNames.map((n, i) => (
                   <button key={i} type="button" onClick={() => setName(n)}
                     className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer">{n}</button>
