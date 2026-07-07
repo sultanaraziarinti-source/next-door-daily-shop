@@ -34,6 +34,11 @@ export default function AdminPage() {
   const [itemPrice, setItemPrice] = useState("");
   const [itemMessage, setItemMessage] = useState("");
 
+  // Remove form
+  const [removeType, setRemoveType] = useState("");
+  const [removeName, setRemoveName] = useState("");
+  const [removeMessage, setRemoveMessage] = useState("");
+
   useEffect(() => {
     if (localStorage.getItem("nd_admin") !== "true") {
       router.replace("/admin/login");
@@ -139,6 +144,28 @@ export default function AdminPage() {
     setItemMessage("Item saved ✓");
   };
 
+  const handleRemove = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRemoveMessage("");
+    const target = removeName.trim().toLowerCase();
+    if (!removeType) { setRemoveMessage("Please choose what to remove."); return; }
+    if (!target) { setRemoveMessage("Please enter the name to remove."); return; }
+    if (removeType === "category") {
+      const next = categories.filter(c => c.name.toLowerCase() !== target);
+      if (next.length === categories.length) { setRemoveMessage(`No category named "${removeName.trim()}" found.`); return; }
+      try { localStorage.setItem("nd_categories", JSON.stringify(next)); } catch { setRemoveMessage("Could not update storage."); return; }
+      setCategories(next);
+      setRemoveMessage("Category removed ✓");
+    } else {
+      const next = items.filter(it => it.name.toLowerCase() !== target);
+      if (next.length === items.length) { setRemoveMessage(`No item named "${removeName.trim()}" found.`); return; }
+      try { localStorage.setItem("nd_items", JSON.stringify(next)); } catch { setRemoveMessage("Could not update storage."); return; }
+      setItems(next);
+      setRemoveMessage("Item removed ✓");
+    }
+    setRemoveName("");
+  };
+
   if (!checked) return null;
 
   return (
@@ -237,6 +264,39 @@ export default function AdminPage() {
             </div>
             <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
               Save
+            </button>
+          </form>
+        </section>
+
+        {/* Remove Category or Item section */}
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
+          <h2 className="font-bold text-gray-800 text-lg mb-5">Remove Category or Item</h2>
+          {removeMessage && (
+            <div className={`mb-4 px-4 py-3 text-sm rounded-xl border ${removeMessage.includes("✓") ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-600"}`}>{removeMessage}</div>
+          )}
+          <form onSubmit={handleRemove} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">What do you want to remove?</label>
+              <select value={removeType} onChange={e => { setRemoveType(e.target.value); setRemoveName(""); setRemoveMessage(""); }}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white">
+                <option value="">Select…</option>
+                <option value="category">Category</option>
+                <option value="item">Item</option>
+              </select>
+            </div>
+            {removeType && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">{removeType === "category" ? "Category name" : "Item name"}</label>
+                <input type="text" value={removeName} onChange={e => setRemoveName(e.target.value)} list="remove-suggestions"
+                  placeholder={removeType === "category" ? "e.g. Vases" : "e.g. puzzle"}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
+                <datalist id="remove-suggestions">
+                  {(removeType === "category" ? categories.map(c => c.name) : items.map(it => it.name)).map((n, i) => <option key={i} value={n} />)}
+                </datalist>
+              </div>
+            )}
+            <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#EF4444" }}>
+              Remove
             </button>
           </form>
         </section>
