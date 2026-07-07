@@ -31,8 +31,20 @@ export default function HomePage() {
 
   useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
-    setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
-    setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+    const load = () => {
+      setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+      setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+    };
+    load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("focus", load);
+    window.addEventListener("storage", load);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", load);
+      window.removeEventListener("storage", load);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
   if (loading || !user) return null;
 

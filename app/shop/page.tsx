@@ -32,8 +32,20 @@ function ShopContent() {
 
   useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
-    setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
-    setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+    const load = () => {
+      setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
+      setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
+    };
+    load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("focus", load);
+    window.addEventListener("storage", load);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", load);
+      window.removeEventListener("storage", load);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
   // Keep the active filter in sync with the ?cat= URL (so "View All Products" resets to all)
   useEffect(() => { setFilter((searchParams.get("cat") as Filter) || "all"); }, [searchParams]);
