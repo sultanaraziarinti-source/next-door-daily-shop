@@ -180,18 +180,6 @@ function ShopContent() {
                 </div>
               );
             })}
-            {(() => {
-              const others = filtered.filter(p => !FILTERS.some(f => f.key === p.category));
-              if (others.length === 0) return null;
-              return (
-                <div className="mb-10">
-                  <h2 className="text-xl font-black text-gray-800 mb-4">Other</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {others.map(p => <ProductCard key={p.id} product={p} onToast={msg => setToast({ msg })} />)}
-                  </div>
-                </div>
-              );
-            })()}
           </>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
