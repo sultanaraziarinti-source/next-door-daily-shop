@@ -17,7 +17,7 @@ type Filter = string; // "all" | built-in keys | custom category names
 type Sort = "default" | "price-asc" | "price-desc" | "name";
 
 function ShopContent() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { clearCart, cartTotal } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +30,7 @@ function ShopContent() {
   const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
   const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
 
-  useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
+  useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
     setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
     setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
@@ -65,7 +65,7 @@ function ShopContent() {
     return list;
   }, [filter, sort, search, adminItems]);
 
-  if (!user) return null;
+  if (loading || !user) return null;
 
   const handleCheckout = () => {
     const total = cartTotal;

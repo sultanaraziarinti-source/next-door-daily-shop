@@ -21,7 +21,7 @@ const CATEGORIES = [
 ];
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { clearCart, cartTotal } = useCart();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -29,12 +29,12 @@ export default function HomePage() {
   const [customCategories, setCustomCategories] = useState<{ name: string; image: string }[]>([]);
   const [adminItems, setAdminItems] = useState<{ name: string; category: string; image: string; price: string }[]>([]);
 
-  useEffect(() => { if (!user) router.replace("/"); }, [user, router]);
+  useEffect(() => { if (!loading && !user) router.replace("/"); }, [user, loading, router]);
   useEffect(() => {
     setCustomCategories(JSON.parse(localStorage.getItem("nd_categories") || "[]"));
     setAdminItems(JSON.parse(localStorage.getItem("nd_items") || "[]"));
   }, []);
-  if (!user) return null;
+  if (loading || !user) return null;
 
   // Turn admin-added items into product cards for the Featured section
   const normalize = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
