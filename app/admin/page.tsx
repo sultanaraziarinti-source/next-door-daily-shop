@@ -78,8 +78,14 @@ export default function AdminPage() {
     reader.readAsDataURL(file);
   };
 
-  // All category names that already exist: built-in + admin-added
-  const existingNames = [...BUILTIN_CATEGORIES.map(c => c.label), ...categories.map(c => c.name)];
+  // All category names that already exist: built-in + admin-added, de-duplicated (case-insensitive)
+  const seenNames = new Set<string>();
+  const existingNames = [...BUILTIN_CATEGORIES.map(c => c.label), ...categories.map(c => c.name)].filter(n => {
+    const key = n.toLowerCase();
+    if (seenNames.has(key)) return false;
+    seenNames.add(key);
+    return true;
+  });
 
   const handleSaveCategory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,9 +203,11 @@ export default function AdminPage() {
                 {BUILTIN_CATEGORIES.map(c => (
                   <option key={c.key} value={c.label}>{c.label}</option>
                 ))}
-                {categories.map((c, i) => (
-                  <option key={`custom-${i}`} value={c.name}>{c.name}</option>
-                ))}
+                {categories
+                  .filter(c => !BUILTIN_CATEGORIES.some(b => b.label.toLowerCase() === c.name.toLowerCase()))
+                  .map((c, i) => (
+                    <option key={`custom-${i}`} value={c.name}>{c.name}</option>
+                  ))}
               </select>
             </div>
             <div>
