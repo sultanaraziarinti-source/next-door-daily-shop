@@ -28,7 +28,7 @@ export default function CartSidebar({ onCheckout }: Props) {
                 <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-2xl border border-gray-100">{item.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-[#1E1E2E] truncate">{item.name}</p>
-                  <p className="text-[#FF6B35] font-bold text-sm">${item.price.toFixed(2)}</p>
+                  <p className="text-[#FF6B35] font-bold text-sm">৳{item.price.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button onClick={() => changeQty(item.id, -1)} className="w-7 h-7 rounded-full border border-gray-200 text-sm font-bold hover:bg-gray-100 cursor-pointer flex items-center justify-center">−</button>
@@ -45,7 +45,7 @@ export default function CartSidebar({ onCheckout }: Props) {
           <div className="px-5 py-4 border-t" style={{ background: "#fff0eb" }}>
             <div className="flex justify-between items-center mb-3">
               <span className="font-semibold text-gray-600">Total</span>
-              <span className="text-xl font-black text-[#1E1E2E]">${cartTotal}</span>
+              <span className="text-xl font-black text-[#1E1E2E]">৳{cartTotal}</span>
             </div>
             <button onClick={onCheckout} className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-colors cursor-pointer" style={{ background: "#FF6B35" }}>
               Checkout →

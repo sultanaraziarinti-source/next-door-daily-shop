@@ -70,9 +70,9 @@ function ShopContent() {
   const handleCheckout = () => {
     const total = cartTotal;
     if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
-      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "USD" });
+      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "BDT" });
     clearCart();
-    setToast({ msg: `Order placed! Total: $${total} 🎉` });
+    setToast({ msg: `Order placed! Total: ৳${total} 🎉` });
   };
 
   const FILTERS: { key: Filter; label: string }[] = [

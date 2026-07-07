@@ -44,8 +44,8 @@ export default function ProductCard({ product: p, onToast }: Props) {
         <p className="font-bold text-gray-800 text-sm mb-2 leading-snug">{p.name}</p>
         <div className="flex items-center justify-between mt-auto pt-2">
           <div className="flex items-center gap-2">
-            <span className="font-black text-lg" style={{ color: "#FF6B35" }}>${p.price.toFixed(2)}</span>
-            {p.oldPrice && <span className="text-xs text-gray-400 line-through">${p.oldPrice.toFixed(2)}</span>}
+            <span className="font-black text-lg" style={{ color: "#FF6B35" }}>৳{p.price.toFixed(2)}</span>
+            {p.oldPrice && <span className="text-xs text-gray-400 line-through">৳{p.oldPrice.toFixed(2)}</span>}
           </div>
           <button onClick={handleAdd} className="w-9 h-9 rounded-full text-white font-bold text-xl flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer" style={{ background: "#FF6B35" }}>+</button>
         </div>

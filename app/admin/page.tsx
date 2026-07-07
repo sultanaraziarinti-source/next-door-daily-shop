@@ -228,9 +228,12 @@ export default function AdminPage() {
               {itemImage && <img src={itemImage} alt="preview" className="mt-3 w-24 h-24 object-cover rounded-xl border border-gray-200" />}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price</label>
-              <input type="number" step="0.01" min="0" value={itemPrice} onChange={e => setItemPrice(e.target.value)} placeholder="e.g. 12.99"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (৳)</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500">৳</span>
+                <input type="number" step="0.01" min="0" value={itemPrice} onChange={e => setItemPrice(e.target.value)} placeholder="e.g. 250"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FF6B35] bg-white" />
+              </div>
             </div>
             <button type="submit" className="py-3 px-6 rounded-xl text-white font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>
               Save
@@ -255,7 +258,7 @@ export default function AdminPage() {
                   <div className="p-3">
                     <p className="text-xs text-[#FF6B35] font-semibold">{it.category}</p>
                     <p className="font-semibold text-gray-800 text-sm truncate">{it.name}</p>
-                    <p className="text-gray-700 font-bold text-sm mt-1">${it.price}</p>
+                    <p className="text-gray-700 font-bold text-sm mt-1">৳{it.price}</p>
                   </div>
                 </div>
               ))}

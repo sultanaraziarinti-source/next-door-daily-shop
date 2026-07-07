@@ -43,7 +43,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       save([...cart, { ...p, qty: 1 }]);
     }
-    gaEvent("add_to_cart", { item_name: p.name, item_category: p.category, value: p.price, currency: "USD" });
+    gaEvent("add_to_cart", { item_name: p.name, item_category: p.category, value: p.price, currency: "BDT" });
   };
 
   const removeFromCart = (id: number) => save(cart.filter(x => x.id !== id));

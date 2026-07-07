@@ -56,9 +56,9 @@ export default function HomePage() {
   const handleCheckout = () => {
     const total = cartTotal;
     if (typeof window !== "undefined" && typeof (window as any).gtag === "function")
-      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "USD" });
+      (window as any).gtag("event", "purchase", { value: parseFloat(total), currency: "BDT" });
     clearCart();
-    setToast({ msg: `Order placed! Total: $${total} 🎉` });
+    setToast({ msg: `Order placed! Total: ৳${total} 🎉` });
   };
 
   return (
@@ -78,7 +78,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-4 text-gray-400 text-lg max-w-lg">Discover quality products across household, kids & decoration — all in one place.</p>
             <div className="mt-8 flex gap-4 flex-wrap">
-              <Link href="/shop" className="px-7 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>Browse Shop →</Link>
+              <Link href="/shop?cat=all" className="px-7 py-3.5 rounded-full font-bold text-sm text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ background: "#FF6B35" }}>Browse Shop →</Link>
               <button onClick={() => document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" })}
                 className="px-7 py-3.5 rounded-full font-bold text-sm text-white border border-white/20 cursor-pointer hover:border-white/50 transition-colors">
                 View Categories
