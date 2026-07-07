@@ -164,11 +164,19 @@ export default function AdminPage() {
     const target = removeName.trim().toLowerCase();
     if (!removeType) { setRemoveMessage("Please choose what to remove."); return; }
     if (!target) { setRemoveMessage("Please enter the name to remove."); return; }
+    // Remove matching entries from the cart cache (nd_cart) too
+    const pruneCart = (names: string[]) => {
+      const cart = JSON.parse(localStorage.getItem("nd_cart") || "[]");
+      const nextCart = cart.filter((c: { name: string }) => !names.includes(c.name.toLowerCase()));
+      if (nextCart.length !== cart.length) localStorage.setItem("nd_cart", JSON.stringify(nextCart));
+    };
+
     if (removeType === "category") {
       const norm = (s: string) => s.toLowerCase().replace(/\s*items$/, "").trim();
       const normTarget = norm(removeName.trim());
       const nextCats = categories.filter(c => c.name.toLowerCase() !== target);
       // Also remove every item that belongs to this category
+      const removedNames = items.filter(it => norm(it.category) === normTarget).map(it => it.name.toLowerCase());
       const nextItems = items.filter(it => norm(it.category) !== normTarget);
       const removedCat = nextCats.length !== categories.length;
       const removedItems = nextItems.length !== items.length;
@@ -177,6 +185,7 @@ export default function AdminPage() {
         localStorage.setItem("nd_categories", JSON.stringify(nextCats));
         localStorage.setItem("nd_items", JSON.stringify(nextItems));
       } catch { setRemoveMessage("Could not update storage."); return; }
+      pruneCart(removedNames);
       setCategories(nextCats);
       setItems(nextItems);
       setRemoveMessage(removedItems ? "Category and its items removed ✓" : "Category removed ✓");
@@ -184,6 +193,7 @@ export default function AdminPage() {
       const next = items.filter(it => it.name.toLowerCase() !== target);
       if (next.length === items.length) { setRemoveMessage(`No item named "${removeName.trim()}" found.`); return; }
       try { localStorage.setItem("nd_items", JSON.stringify(next)); } catch { setRemoveMessage("Could not update storage."); return; }
+      pruneCart([target]);
       setItems(next);
       setRemoveMessage("Item removed ✓");
     }
