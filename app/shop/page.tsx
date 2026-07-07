@@ -140,7 +140,7 @@ function ShopContent() {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 overflow-x-auto">
           <span className="text-sm text-gray-500 font-medium flex-shrink-0 hidden md:block">Filter:</span>
           {FILTERS.map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)}
+            <button key={f.key} onClick={() => { setFilter(f.key); router.replace(`/shop?cat=${encodeURIComponent(f.key)}`, { scroll: false }); }}
               className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 transition-colors cursor-pointer ${filter === f.key ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               style={filter === f.key ? { background: "#FF6B35" } : {}}>
               {f.label}
