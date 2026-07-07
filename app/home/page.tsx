@@ -186,7 +186,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 text-center text-gray-500 text-sm">
-          © 2025 NextDoor<span style={{ color: "#FF6B35" }}>Shop</span>. All rights reserved.
+          © 2026 NextDoor<span style={{ color: "#FF6B35" }}>Shop</span>. All rights reserved.
         </div>
       </footer>
 
