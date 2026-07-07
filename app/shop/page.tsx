@@ -145,7 +145,7 @@ function ShopContent() {
                 setFilter(f.key);
                 const params = new URLSearchParams(searchParams.toString());
                 params.set("cat", f.key);
-                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+                window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
               }}
               className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 transition-colors cursor-pointer ${filter === f.key ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               style={filter === f.key ? { background: "#FF6B35" } : {}}>
